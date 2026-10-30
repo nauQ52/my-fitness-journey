@@ -38,6 +38,7 @@ body {
   color: var(--c);
   border-bottom: 2px solid var(--c);
 }
+
 /* Giao diện Lịch Tập Luyện */
 .calendar { background: #111; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 1px solid #333; }
 .cal-header { font-size: 16px; font-weight: bold; margin-bottom: 12px; text-align: center; color: #fff; }

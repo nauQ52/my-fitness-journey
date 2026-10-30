@@ -7,7 +7,7 @@ const CHART_NAVY_COLOR = '#0088ff'; // Màu Xanh Navi Sáng cho Biểu đồ
 
 // ---------- App State & DOM Helpers ----------
 const $ = s => document.querySelector(s);
-const COL = { run: '#b6ff00', cycle: '#00e5ff' };
+const COL = { run: '#b6ff00', cycle: '#00e5ff', pushup: '#ff0055' };
 const S = { type: 'run', pts: [], dist: 0, t0: 0, el: 0, watch: null, worker: null, startPhoto: null, endPhoto: null, on: false };
 
 let accessToken = localStorage.getItem('mfj_drive_token') || null;
@@ -219,17 +219,17 @@ const fmtT = s => { s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.
 const fmtPace = (km, s, type) => { if (km < 0.02) return '--'; if (type === 'cycle') return (km / (s / 3600)).toFixed(1); const p = s / 60 / km; return Math.floor(p) + ':' + String(Math.round(p % 1 * 60)).padStart(2, '0').replace(/^60$/, '59'); };
 const kcal = (km, type, kg) => Math.round(km * kg * (type === 'run' ? 1.0 : 0.4));
 const hav = (a, b) => { const R = 6371e3, r = Math.PI / 180, dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r; const x = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); };
-const setColor = t => document.documentElement.style.setProperty('--c', COL[t]);
+const setColor = t => document.documentElement.style.setProperty('--c', COL[t] || '#b6ff00');
 
 // ---------- i18n (EN / VN) ----------
 const T = {
-  en: { tTrack: 'Track', tHist: 'History', run: '🏃 Running', cycle: '🚴 Cycling', time: 'time', startPh: 'Start photo (optional)', weight: 'Your weight (kg), for calories:', finTitle: 'Finish workout', endPh: 'End photo (optional)', notesPh: 'Notes: how did it feel?', discard: 'Discard', saveBtn: 'Save workout', dl: '⬇ Download PNG (1920×1080)', close: 'Close', cam: '📷 Take a photo', up: '🖼 Choose from gallery', noPh: 'No photo yet', phOk: '✓ Photo added', rmPh: '✕ Remove', start: '▶ START WORKOUT', stop: '■ FINISH', noLoc: 'Location unavailable. Allow GPS access (HTTPS required).', gpsErr: 'GPS error: ', tracking: 'Tracking… keep this screen on for best GPS.', nogeo: 'Geolocation not supported.', fullNoPh: 'Storage full: saved without photos.', full: 'Storage full. Delete old workouts.', delConf: 'Delete this workout?', empty: 'No workouts yet. Go get moving! 💪', workouts: 'workouts', total: 'total', runS: '🏃 Run', rideS: '🚴 Ride', shareBtn: 'Share card', RUN: 'RUNNING', CYC: 'CYCLING', dist: 'DISTANCE (KM)', tm: 'TIME', pace: 'PACE (/KM)', speed: 'SPEED (KM/H)', cPace: 'PACE PROFILE', cSpeed: 'SPEED PROFILE', render: 'Rendering…', signIn: 'Sign in with Google', signOut: 'Sign out', uploading: 'Uploading to Google Drive…' },
-  vi: { tTrack: 'Theo dõi', tHist: 'Lịch sử', run: '🏃 Chạy bộ', cycle: '🚴 Đạp xe', time: 'thời gian', startPh: 'Ảnh bắt đầu (tuỳ chọn)', weight: 'Cân nặng (kg), để tính calo:', finTitle: 'Kết thúc buổi tập', endPh: 'Ảnh kết thúc (tuỳ chọn)', notesPh: 'Ghi chú: bạn cảm thấy thế nào?', discard: 'Huỷ bỏ', saveBtn: 'Lưu buổi tập', dl: '⬇ Tải ảnh PNG (1920×1080)', close: 'Đóng', cam: '📷 Chụp ảnh ngay', up: '🖼 Chọn từ thư viện', noPh: 'Chưa có ảnh', phOk: '✓ Đã thêm ảnh', rmPh: '✕ Xoá ảnh', start: '▶ BẮT ĐẦU TẬP', stop: '■ KẾT THÚC', noLoc: 'Không lấy được vị trí. Hãy cho phép GPS (cần HTTPS).', gpsErr: 'Lỗi GPS: ', tracking: 'Đang theo dõi…', nogeo: 'Trình duyệt không hỗ trợ định vị.', fullNoPh: 'Bộ nhớ đầy: đã lưu nhưng không kèm ảnh.', full: 'Bộ nhớ đầy. Hãy xoá bớt buổi tập cũ.', delConf: 'Xoá buổi tập này?', empty: 'Chưa có buổi tập nào. Bắt đầu thôi! 💪', workouts: 'buổi tập', total: 'tổng cộng', runS: '🏃 Chạy', rideS: '🚴 Đạp xe', shareBtn: 'Tạo thẻ chia sẻ', RUN: 'CHẠY BỘ', CYC: 'ĐẠP XE', dist: 'QUÃNG ĐƯỜNG (KM)', tm: 'THỜI GIAN', pace: 'PACE (/KM)', speed: 'TỐC ĐỘ (KM/H)', cPace: 'BIỂU ĐỒ PACE', cSpeed: 'BIỂU ĐỒ TỐC ĐỘ', render: 'Đang tạo ảnh…', signIn: 'Đăng nhập Google', signOut: 'Đăng xuất', uploading: 'Đang tải lên Google Drive…' }
+  en: { tTrack: 'Track', tHist: 'History', run: '🏃 Running', cycle: '🚴 Cycling', pushup: '💪 Push-ups', time: 'time', startPh: 'Start photo (optional)', weight: 'Your weight (kg), for calories:', finTitle: 'Finish workout', endPh: 'End photo (optional)', notesPh: 'Notes: how did it feel?', discard: 'Discard', saveBtn: 'Save workout', dl: '⬇ Download PNG (1920×1080)', close: 'Close', cam: '📷 Take a photo', up: '🖼 Choose from gallery', noPh: 'No photo yet', phOk: '✓ Photo added', rmPh: '✕ Remove', start: '▶ START WORKOUT', stop: '■ FINISH', noLoc: 'Location unavailable. Allow GPS access (HTTPS required).', gpsErr: 'GPS error: ', tracking: 'Tracking… keep this screen on for best GPS.', nogeo: 'Geolocation not supported.', fullNoPh: 'Storage full: saved without photos.', full: 'Storage full. Delete old workouts.', delConf: 'Delete this workout?', empty: 'No workouts yet. Go get moving! 💪', workouts: 'workouts', total: 'total', runS: '🏃 Run', rideS: '🚴 Ride', pushS: '💪 Push-ups', shareBtn: 'Share card', RUN: 'RUNNING', CYC: 'CYCLING', PUSH: 'PUSH-UPS', dist: 'DISTANCE (KM)', tm: 'TIME', pace: 'PACE (/KM)', speed: 'SPEED (KM/H)', cPace: 'PACE PROFILE', cSpeed: 'SPEED PROFILE', render: 'Rendering…', signIn: 'Sign in with Google', signOut: 'Sign out', uploading: 'Uploading to Google Drive…' },
+  vi: { tTrack: 'Theo dõi', tHist: 'Lịch sử', run: '🏃 Chạy bộ', cycle: '🚴 Đạp xe', pushup: '💪 Hít đất', time: 'thời gian', startPh: 'Ảnh bắt đầu (tuỳ chọn)', weight: 'Cân nặng (kg), để tính calo:', finTitle: 'Kết thúc buổi tập', endPh: 'Ảnh kết thúc (tuỳ chọn)', notesPh: 'Ghi chú: bạn cảm thấy thế nào?', discard: 'Huỷ bỏ', saveBtn: 'Lưu buổi tập', dl: '⬇ Tải ảnh PNG (1920×1080)', close: 'Đóng', cam: '📷 Chụp ảnh ngay', up: '🖼 Chọn từ thư viện', noPh: 'Chưa có ảnh', phOk: '✓ Đã thêm ảnh', rmPh: '✕ Xoá ảnh', start: '▶ BẮT ĐẦU TẬP', stop: '■ KẾT THÚC', noLoc: 'Không lấy được vị trí. Hãy cho phép GPS (cần HTTPS).', gpsErr: 'Lỗi GPS: ', tracking: 'Đang theo dõi…', nogeo: 'Trình duyệt không hỗ trợ định vị.', fullNoPh: 'Bộ nhớ đầy: đã lưu nhưng không kèm ảnh.', full: 'Bộ nhớ đầy. Hãy xoá bớt buổi tập cũ.', delConf: 'Xoá buổi tập này?', empty: 'Chưa có buổi tập nào. Bắt đầu thôi! 💪', workouts: 'buổi tập', total: 'tổng cộng', runS: '🏃 Chạy', rideS: '🚴 Đạp xe', pushS: '💪 Hít đất', shareBtn: 'Tạo thẻ chia sẻ', RUN: 'CHẠY BỘ', CYC: 'ĐẠP XE', PUSH: 'HÍT ĐẤT', dist: 'QUÃNG ĐƯỜNG (KM)', tm: 'THỜI GIAN', pace: 'PACE (/KM)', speed: 'TỐC ĐỘ (KM/H)', cPace: 'BIỂU ĐỒ PACE', cSpeed: 'BIỂU ĐỒ TỐC ĐỘ', render: 'Đang tạo ảnh…', signIn: 'Đăng nhập Google', signOut: 'Đăng xuất', uploading: 'Đang tải lên Google Drive…' }
 };
 
 let LANG = localStorage.getItem('mfj_lang') || ((navigator.language || '').startsWith('vi') ? 'vi' : 'en');
 const t = k => T[LANG][k] || k, loc = () => LANG === 'vi' ? 'vi-VN' : 'en-US';
-const paceL = () => { $('#mPaceL').textContent = S.type === 'run' ? 'min/km' : 'km/h'; };
+const paceL = () => { $('#mPaceL').textContent = S.type === 'run' ? 'min/km' : (S.type === 'cycle' ? 'km/h' : 'reps'); };
 const setGo = () => { $('#goBtn').textContent = S.on ? t('stop') : t('start'); };
 
 function applyLang() {
@@ -252,7 +252,7 @@ $('#lang').onclick = () => {
 $('#authBtn').onclick = handleAuthClick;
 applyLang();
 
-// ---------- Tabs & type ----------
+// ---------- Tabs & Type Switching ----------
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
   $('#track').classList.toggle('hidden', b.dataset.t !== 'track');
@@ -265,9 +265,24 @@ document.querySelectorAll('#types button').forEach(b => b.onclick = () => {
   S.type = b.dataset.ty;
   setColor(S.type);
   document.querySelectorAll('#types button').forEach(x => x.classList.toggle('neon', x === b));
-  paceL();
-  poly.setStyle({ color: COL[S.type] });
-  document.getElementById('map').style.setProperty('--c', COL[S.type]);
+
+  const mapEl = document.getElementById('map');
+  const pushupEl = document.getElementById('pushupBox');
+
+  if (S.type === 'pushup') {
+    mapEl.classList.add('hidden');
+    pushupEl.classList.remove('hidden');
+    initPushupTracker();
+  } else {
+    mapEl.classList.remove('hidden');
+    pushupEl.classList.add('hidden');
+    stopPushupTracker();
+
+    paceL();
+    poly.setStyle({ color: COL[S.type] });
+    mapEl.style.setProperty('--c', COL[S.type]);
+    map.invalidateSize();
+  }
 });
 
 // ---------- Map ----------
@@ -325,15 +340,14 @@ picker($('#startPick'), 'startPhoto'); picker($('#endPick'), 'endPhoto');
 // ---------- Tracking ----------
 function tick() {
   if (!S.on) return;
-  S.el = (Date.now() - S.t0) / 1000; // Tự động đồng bộ chính xác thời gian thực tế
+  S.el = (Date.now() - S.t0) / 1000;
   const kg = +$('#weight').value || 70, km = S.dist / 1000;
-  $('#mDist').textContent = km.toFixed(2);
+  $('#mDist').textContent = S.type === 'pushup' ? pushupCount : km.toFixed(2);
   $('#mTime').textContent = fmtT(S.el);
-  $('#mPace').textContent = fmtPace(km, S.el, S.type);
-  $('#mCal').textContent = kcal(km, S.type, kg);
+  $('#mPace').textContent = S.type === 'pushup' ? '--' : fmtPace(km, S.el, S.type);
+  $('#mCal').textContent = S.type === 'pushup' ? Math.round(pushupCount * 0.45) : kcal(km, S.type, kg);
 }
 
-// Lắng nghe khi bật lại màn hình để cập nhật ngay giao diện
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && S.on) {
     tick();
@@ -341,6 +355,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function onPos(p) {
+  if (S.type === 'pushup') return;
   const c = p.coords; if (c.accuracy > 40) return;
   const pt = [c.latitude, c.longitude, Date.now()], last = S.pts[S.pts.length - 1];
   if (last) { const d = hav(last, pt); if (d < 4 || d > 150) return; S.dist += d; }
@@ -350,17 +365,17 @@ function onPos(p) {
 
 $('#goBtn').onclick = () => {
   if (!S.on) {
-    if (!navigator.geolocation) return alert(t('nogeo'));
+    if (S.type !== 'pushup' && !navigator.geolocation) return alert(t('nogeo'));
     Object.assign(S, { pts: [], dist: 0, t0: Date.now(), on: true }); poly.setLatLngs([]);
 
-    // Cấu hình GPS tối ưu nhất
-    S.watch = navigator.geolocation.watchPosition(onPos, e => $('#gpsMsg').textContent = t('gpsErr') + e.message, {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000
-    });
+    if (S.type !== 'pushup') {
+      S.watch = navigator.geolocation.watchPosition(onPos, e => $('#gpsMsg').textContent = t('gpsErr') + e.message, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
+      });
+    }
 
-    // Tạo Worker ngầm đếm giờ không bị dừng khi ẩn tab
     if (!S.worker) {
       S.worker = createTimerWorker();
       S.worker.onmessage = e => { if (e.data === 'tick') tick(); };
@@ -368,12 +383,11 @@ $('#goBtn').onclick = () => {
     S.worker.postMessage('start');
 
     setGo(); $('#goBtn').style.background = '#ff3355'; $('#goBtn').style.color = '#fff';
-    $('#startBox').classList.add('hidden'); $('#gpsMsg').textContent = t('tracking');
+    $('#startBox').classList.add('hidden'); $('#gpsMsg').textContent = S.type === 'pushup' ? 'Đang đếm hít đất...' : t('tracking');
     
-    // Giữ màn hình sáng nếu trình duyệt hỗ trợ WakeLock
     navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {});
   } else {
-    navigator.geolocation.clearWatch(S.watch);
+    if (S.watch) navigator.geolocation.clearWatch(S.watch);
     if (S.worker) S.worker.postMessage('stop');
     tick();
     $('#finish').classList.remove('hidden');
@@ -383,9 +397,11 @@ $('#goBtn').onclick = () => {
 function reset() {
   S.on = false; S.startPhoto = S.endPhoto = null; $('#finish').classList.add('hidden'); $('#notes').value = '';
   setGo(); $('#goBtn').style.cssText = ''; $('#startBox').classList.remove('hidden');
-  ['#mDist', '#mCal'].forEach(s => $(s).textContent = s === '#mDist' ? '0.00' : '0');
+  ['#mDist', '#mCal'].forEach(s => $(s).textContent = '0');
   $('#mTime').textContent = '00:00'; $('#mPace').textContent = '--';
   picker($('#startPick'), 'startPhoto'); picker($('#endPick'), 'endPhoto'); poly.setLatLngs([]); me.remove(); $('#gpsMsg').textContent = '';
+  pushupCount = 0;
+  if ($('#pushupCount')) $('#pushupCount').textContent = '0';
 }
 $('#discard').onclick = reset;
 
@@ -402,7 +418,7 @@ $('#save').onclick = async () => {
 
   const workoutId = Date.now();
   const workoutDate = new Date();
-  const typeLabel = S.type === 'run' ? 'Chạy' : 'ĐạpXe';
+  const typeLabel = S.type === 'run' ? 'Chạy' : (S.type === 'cycle' ? 'ĐạpXe' : 'HitDat');
   
   const pad = n => String(n).padStart(2, '0');
   const dateStr = `${workoutDate.getFullYear()}-${pad(workoutDate.getMonth() + 1)}-${pad(workoutDate.getDate())}_${pad(workoutDate.getHours())}-${pad(workoutDate.getMinutes())}`;
@@ -412,9 +428,9 @@ $('#save').onclick = async () => {
     id: workoutId,
     type: S.type,
     date: workoutDate.toISOString(),
-    dist: S.dist / 1000,
+    dist: S.type === 'pushup' ? pushupCount : S.dist / 1000,
     dur: S.el,
-    kcal: kcal(S.dist / 1000, S.type, +$('#weight').value || 70),
+    kcal: S.type === 'pushup' ? Math.round(pushupCount * 0.45) : kcal(S.dist / 1000, S.type, +$('#weight').value || 70),
     pts,
     startPhoto: S.startPhoto,
     endPhoto: S.endPhoto,
@@ -484,9 +500,8 @@ function speeds(w) {
   return out;
 }
 
-// Vẽ biểu đồ với màu Xanh Navi Sáng
 function drawChart(cv, w, color = CHART_NAVY_COLOR) {
-  const chartColor = CHART_NAVY_COLOR; // Màu Xanh Navi Sáng
+  const chartColor = CHART_NAVY_COLOR;
   const g = cv.getContext('2d'), W = cv.width, H = cv.height, v = speeds(w), mx = Math.max(...v) * 1.1, mn = Math.min(...v) * .8; g.clearRect(0, 0, W, H);
   const X = i => i / (v.length - 1) * W, Y = x => H - 8 - (x - mn) / (mx - mn || 1) * (H - 16);
   const gr = g.createLinearGradient(0, 0, 0, H); 
@@ -540,7 +555,7 @@ async function renderHist() {
   const ws = await loadWorkouts();
 
   if (!ws.length) { el.innerHTML = '<p class="text-zinc-500 text-center py-10">' + t('empty') + '</p>'; return; }
-  const tot = ws.reduce((a, w) => a + w.dist, 0);
+  const tot = ws.reduce((a, w) => a + (w.type === 'pushup' ? 0 : w.dist), 0);
 
   const calendarHtml = renderCalendar(ws);
 
@@ -548,11 +563,11 @@ async function renderHist() {
     <div>${ws.length} ${t('workouts')} · <b class="text-white">${tot.toFixed(1)} km</b> ${t('total')}</div>
     ${accessToken ? '<span class="text-xs text-lime-400 font-semibold">☁ Google Drive</span>' : '<span class="text-xs text-zinc-500">💾 Local Storage</span>'}
   </div>` + ws.map(w => `
-  <div class="card p-3 flex gap-3 mb-3" style="--c:${COL[w.type]}">
+  <div class="card p-3 flex gap-3 mb-3" style="--c:${COL[w.type] || '#ff0055'}">
     <canvas width="220" height="220" data-id="${w.id}" class="w-24 h-24 rounded-xl bg-black shrink-0"></canvas>
     <div class="flex-1 min-w-0">
-      <div class="font-bold">${w.type === 'run' ? t('runS') : t('rideS')} <span class="text-xs text-zinc-500 font-normal">${new Date(w.date).toLocaleString(loc())}</span></div>
-      <div class="text-sm mt-1" style="color:var(--c)">${w.dist.toFixed(2)} km · ${fmtT(w.dur)} · ${fmtPace(w.dist, w.dur, w.type)} ${w.type === 'run' ? '/km' : 'km/h'} · ${w.kcal} kcal</div>
+      <div class="font-bold">${w.type === 'run' ? t('runS') : (w.type === 'cycle' ? t('rideS') : t('pushS'))} <span class="text-xs text-zinc-500 font-normal">${new Date(w.date).toLocaleString(loc())}</span></div>
+      <div class="text-sm mt-1" style="color:var(--c)">${w.type === 'pushup' ? w.dist + ' cái' : w.dist.toFixed(2) + ' km'} · ${fmtT(w.dur)} · ${w.kcal} kcal</div>
       ${w.notes ? `<div class="text-xs text-zinc-400 mt-1 truncate">${w.notes.replace(/</g, '&lt;')}</div>` : ''}
       <div class="flex gap-2 mt-3 items-center flex-wrap">
         <button class="btn neon text-xs py-1" onclick="openShare(${w.id})">${t('shareBtn')}</button>
@@ -561,7 +576,7 @@ async function renderHist() {
       </div></div></div>`).join('');
 
   el.innerHTML = calendarHtml + listHtml;
-  el.querySelectorAll('canvas').forEach(c => { const w = ws.find(x => x.id == c.dataset.id); drawRoute(c, w.pts, COL[w.type], 5); });
+  el.querySelectorAll('canvas').forEach(c => { const w = ws.find(x => x.id == c.dataset.id); if (w && w.pts) drawRoute(c, w.pts, COL[w.type] || '#ff0055', 5); });
 }
 
 async function del(id) {
@@ -582,7 +597,7 @@ async function openShare(id) {
   const ws = accessToken ? driveWorkoutsCache : loadLocal();
   const w = ws.find(x => x.id === id);
   if (!w) return;
-  const c = COL[w.type], bg = w.endPhoto || w.startPhoto;
+  const c = COL[w.type] || '#ff0055', bg = w.endPhoto || w.startPhoto;
   const st = (l, v) => `<div style="background:#ffffff12;border-radius:14px;padding:12px 16px"><div style="font-size:30px;font-weight:900;color:${c}">${v}</div><div style="font-size:12px;letter-spacing:2px;color:#aab">${l}</div></div>`;
   
   $('#cardBox').innerHTML = `
@@ -591,11 +606,11 @@ async function openShare(id) {
   <div style="position:absolute;left:40px;top:40px;width:400px;height:400px;background:#00000066;border:1px solid ${c}55;border-radius:24px"><canvas id="cRoute" width="800" height="800" style="width:400px;height:400px"></canvas></div>
   ${w.startPhoto && w.endPhoto ? `<div style="position:absolute;left:40px;top:456px;display:flex;gap:10px"><img src="${w.startPhoto}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid ${c}"><img src="${w.endPhoto}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #ff3355"></div>` : ''}
   <div style="position:absolute;left:480px;top:40px;right:40px">
-    <div style="font-size:14px;letter-spacing:4px;color:${c};font-weight:800">${w.type === 'run' ? t('RUN') : t('CYC')}</div>
+    <div style="font-size:14px;letter-spacing:4px;color:${c};font-weight:800">${w.type === 'run' ? t('RUN') : (w.type === 'cycle' ? t('CYC') : t('PUSH'))}</div>
     <div style="font-size:26px;font-weight:800;margin:4px 0 16px">${new Date(w.date).toLocaleDateString(loc(), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-      ${st(t('dist'), w.dist.toFixed(2))}${st(t('tm'), fmtT(w.dur))}${st(w.type === 'run' ? t('pace') : t('speed'), fmtPace(w.dist, w.dur, w.type))}</div>
-    <div style="font-size:12px;letter-spacing:2px;color:#aab;margin:18px 0 6px">${w.type === 'run' ? t('cPace') : t('cSpeed')} · ${w.kcal} KCAL</div>
+      ${st(w.type === 'pushup' ? 'SỐ LẦN' : t('dist'), w.type === 'pushup' ? w.dist + ' cái' : w.dist.toFixed(2))}${st(t('tm'), fmtT(w.dur))}${st('CALO', w.kcal + ' kcal')}</div>
+    <div style="font-size:12px;letter-spacing:2px;color:#aab;margin:18px 0 6px">${w.type === 'run' ? t('cPace') : t('cSpeed')}</div>
     <canvas id="cChart" width="880" height="240" style="width:440px;height:120px"></canvas>
     ${w.notes ? `<div style="font-size:14px;color:#ccd;margin-top:10px;max-height:40px;overflow:hidden">“${w.notes.replace(/</g, '&lt;').slice(0, 110)}”</div>` : ''}
   </div>
@@ -633,22 +648,22 @@ async function downloadSticker(id) {
   ctx.shadowBlur = 4;
 
   ctx.font = 'bold 22px sans-serif';
-  ctx.fillText('Distance', 200, 60);
+  ctx.fillText(w.type === 'pushup' ? 'Push-ups' : 'Distance', 200, 60);
   ctx.font = 'bold 55px sans-serif';
-  ctx.fillText(w.dist.toFixed(2) + ' km', 200, 115);
+  ctx.fillText(w.type === 'pushup' ? w.dist + ' reps' : w.dist.toFixed(2) + ' km', 200, 115);
 
   ctx.font = 'bold 22px sans-serif';
-  ctx.fillText(w.type === 'run' ? 'Pace' : 'Speed', 200, 190);
-  ctx.font = 'bold 55px sans-serif';
-  ctx.fillText(fmtPace(w.dist, w.dur, w.type) + (w.type === 'run' ? ' /km' : ' km/h'), 200, 245);
-
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillText('Time', 200, 320);
+  ctx.fillText('Time', 200, 190);
   ctx.font = 'bold 55px sans-serif';
   const h = Math.floor(w.dur / 3600);
   const min = Math.floor((w.dur % 3600) / 60);
   const sec = Math.floor(w.dur % 60);
-  ctx.fillText((h > 0 ? h + 'h ' : '') + min + 'm ' + sec + 's', 200, 375);
+  ctx.fillText((h > 0 ? h + 'h ' : '') + min + 'm ' + sec + 's', 200, 245);
+
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('Calories', 200, 320);
+  ctx.font = 'bold 55px sans-serif';
+  ctx.fillText(w.kcal + ' kcal', 200, 375);
 
   ctx.shadowBlur = 0;
   const pts = w.pts;
@@ -677,11 +692,9 @@ async function downloadSticker(id) {
 
 // ---------- Push-up AI Detection Logic ----------
 let pushupCount = 0;
-let pushupStage = 'UP'; // 'UP' hoặc 'DOWN'
-let poseDetector = null;
+let pushupStage = 'UP';
 let cameraHelper = null;
 
-// Tính góc giữa 3 điểm (A: Vai, B: Khuỷu tay, C: Cổ tay)
 function calculateAngle(A, B, C) {
   const radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
   let angle = Math.abs((radians * 180.0) / Math.PI);
@@ -689,10 +702,10 @@ function calculateAngle(A, B, C) {
   return angle;
 }
 
-// Khởi tạo MediaPipe Pose
 function initPushupTracker() {
   const videoElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('poseCanvas');
+  if (!videoElement || !canvasElement) return;
   const canvasCtx = canvasElement.getContext('2d');
 
   const pose = new Pose({
@@ -717,25 +730,22 @@ function initPushupTracker() {
     if (results.poseLandmarks) {
       const lm = results.poseLandmarks;
 
-      // Lấy tọa độ vai, khuỷu tay, cổ tay (dùng bên trái: 11, 13, 15 hoặc phải: 12, 14, 16)
       const leftShoulder = lm[11], leftElbow = lm[13], leftWrist = lm[15];
       const rightShoulder = lm[12], rightElbow = lm[14], rightWrist = lm[16];
 
-      // Chọn bên có độ tin cậy hiển thị rõ hơn
       const useLeft = (leftShoulder.visibility || 0) > (rightShoulder.visibility || 0);
       const shoulder = useLeft ? leftShoulder : rightShoulder;
       const elbow = useLeft ? leftElbow : rightElbow;
       const wrist = useLeft ? leftWrist : rightWrist;
 
-      // Tính góc khuỷu tay
       const angle = calculateAngle(shoulder, elbow, wrist);
 
-      // Logic chuyển trạng thái đếm số lần
       const stateEl = document.getElementById('pushupState');
       if (angle > 160) {
         if (pushupStage === 'DOWN') {
           pushupCount++;
           document.getElementById('pushupCount').textContent = pushupCount;
+          if (S.on) tick();
         }
         pushupStage = 'UP';
         if (stateEl) { stateEl.textContent = 'ĐẨY LÊN (UP)'; stateEl.className = 'absolute top-4 right-4 bg-lime-500/80 text-black px-3 py-1.5 rounded-xl text-xs font-bold'; }
@@ -744,7 +754,6 @@ function initPushupTracker() {
         if (stateEl) { stateEl.textContent = 'HẠ XUỐNG (DOWN)'; stateEl.className = 'absolute top-4 right-4 bg-orange-500/80 text-white px-3 py-1.5 rounded-xl text-xs font-bold'; }
       }
 
-      // Vẽ khớp khuỷu tay lên màn hình
       canvasCtx.fillStyle = '#00e5ff';
       [shoulder, elbow, wrist].forEach(pt => {
         canvasCtx.beginPath();
@@ -766,7 +775,6 @@ function initPushupTracker() {
   cameraHelper.start();
 }
 
-// Dừng camera khi chuyển bài tập khác
 function stopPushupTracker() {
   if (cameraHelper) {
     cameraHelper.stop();
