@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Fitness Journey</title>
+  
+  <!-- External Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen pb-10">
+  <header class="max-w-3xl mx-auto px-4 pt-4">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <h1 class="text-xl font-black tracking-tight">MY FITNESS <span style="color:var(--c)">JOURNEY</span></h1>
+      <div class="flex items-center gap-2">
+        <!-- Google Auth Container -->
+        <div id="authBox" class="flex items-center gap-2">
+          <button id="authBtn" class="btn text-xs neon flex items-center gap-1.5" style="padding:.35rem .8rem">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M21.35 11.1H12v3.8h5.35c-.23 1.25-.94 2.31-2 3.03v2.51h3.24c1.9-1.75 2.99-4.32 2.99-7.54 0-.52-.05-1.03-.13-1.5z"/>
+              <path fill="currentColor" d="M12 21c2.7 0 4.96-.89 6.62-2.42l-3.24-2.51c-.9.6-2.04.95-3.38.95-2.6 0-4.8-1.76-5.58-4.12H3.06v2.58C4.71 18.73 8.1 21 12 21z"/>
+              <path fill="currentColor" d="M6.42 12.91c-.2-.6-.31-1.24-.31-1.91s.11-1.31.31-1.91V6.51H3.06C2.38 7.87 2 9.39 2 11s.38 3.13 1.06 4.49l3.36-2.58z"/>
+              <path fill="currentColor" d="M12 5.38c1.47 0 2.79.5 3.83 1.49l2.87-2.87C16.95 2.22 14.7 1.25 12 1.25 8.1 1.25 4.71 3.52 3.06 6.51l3.36 2.58c.78-2.36 2.98-4.12 5.58-4.12z"/>
+            </svg>
+            <span id="authTxt" data-i="signIn">Đăng nhập Google</span>
+          </button>
+        </div>
+        <button id="lang" class="btn text-sm" style="padding:.35rem .8rem"></button>
+      </div>
+    </div>
+    <nav class="flex gap-6 mt-3 border-b border-zinc-800 font-semibold">
+      <button class="tab on pb-2" data-t="track" data-i="tTrack">Theo dõi</button>
+      <button class="tab pb-2" data-t="hist" data-i="tHist">Lịch sử</button>
+    </nav>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 mt-4">
+    <section id="track" class="space-y-3">
+      <div class="flex gap-2" id="types">
+        <button class="btn neon flex-1" data-ty="run" data-i="run">🏃 Chạy bộ</button>
+        <button class="btn flex-1" data-ty="cycle" data-i="cycle">🚴 Đạp xe</button>
+      </div>
+      <div id="map" class="rounded-2xl overflow-hidden" style="height:42vh;min-height:260px"></div>
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div class="card p-2"><div id="mDist" class="text-2xl font-black">0.00</div><div class="text-xs text-zinc-400">km</div></div>
+        <div class="card p-2"><div id="mTime" class="text-2xl font-black">00:00</div><div class="text-xs text-zinc-400" data-i="time">thời gian</div></div>
+        <div class="card p-2"><div id="mPace" class="text-2xl font-black">--</div><div id="mPaceL" class="text-xs text-zinc-400">min/km</div></div>
+        <div class="card p-2"><div id="mCal" class="text-2xl font-black">0</div><div class="text-xs text-zinc-400">kcal</div></div>
+      </div>
+      <div class="card p-3 space-y-2" id="startBox">
+        <div class="text-sm font-semibold" data-i="startPh">Ảnh bắt đầu (tuỳ chọn)</div>
+        <div id="startPick"></div>
+        <label class="text-sm text-zinc-400"><span data-i="weight">Cân nặng (kg), để tính calo:</span>
+          <input id="weight" type="number" value="70" class="bg-zinc-900 rounded px-2 py-1 w-20 ml-1 text-white"></label>
+      </div>
+      <div id="gpsMsg" class="text-xs text-zinc-500"></div>
+      <button id="goBtn" class="btn neon w-full text-lg">▶ BẮT ĐẦU TẬP</button>
+    </section>
+
+    <section id="hist" class="hidden space-y-3"></section>
+  </main>
+
+  <!-- Finish modal -->
+  <div id="finish" class="hidden fixed inset-0 bg-black/80 z-[2000] p-4 overflow-auto">
+    <div class="card max-w-md mx-auto p-4 space-y-3 mt-8">
+      <h2 class="text-lg font-black" data-i="finTitle">Kết thúc buổi tập</h2>
+      <div class="text-sm font-semibold" data-i="endPh">Ảnh kết thúc (tuỳ chọn)</div>
+      <div id="endPick"></div>
+      <textarea id="notes" rows="3" data-ip="notesPh" placeholder="Ghi chú: bạn cảm thấy thế nào?" class="w-full bg-zinc-900 rounded-lg p-2"></textarea>
+      <div class="flex gap-2">
+        <button id="discard" class="btn" data-i="discard">Huỷ bỏ</button>
+        <button id="save" class="btn neon flex-1" data-i="saveBtn">Lưu buổi tập</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share modal -->
+  <div id="share" class="hidden fixed inset-0 bg-black/90 z-[2000] p-3 overflow-auto">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex gap-2 mb-3">
+        <button id="dl" class="btn neon flex-1" data-i="dl">⬇ Tải ảnh PNG (1920×1080)</button>
+        <button id="closeShare" class="btn" data-i="close">Đóng</button>
+      </div>
+      <div id="cardWrap" style="width:960px;height:540px;transform-origin:top left">
+        <div id="cardBox" style="width:960px;height:540px;position:relative;overflow:hidden;background:#0a0a0f;font-family:system-ui,sans-serif;color:#fff"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
