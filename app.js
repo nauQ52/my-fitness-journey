@@ -674,3 +674,102 @@ async function downloadSticker(id) {
   a.href = canvas.toDataURL('image/png');
   a.click();
 }
+
+// ---------- Push-up AI Detection Logic ----------
+let pushupCount = 0;
+let pushupStage = 'UP'; // 'UP' hoặc 'DOWN'
+let poseDetector = null;
+let cameraHelper = null;
+
+// Tính góc giữa 3 điểm (A: Vai, B: Khuỷu tay, C: Cổ tay)
+function calculateAngle(A, B, C) {
+  const radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
+  let angle = Math.abs((radians * 180.0) / Math.PI);
+  if (angle > 180.0) angle = 360.0 - angle;
+  return angle;
+}
+
+// Khởi tạo MediaPipe Pose
+function initPushupTracker() {
+  const videoElement = document.getElementById('webcam');
+  const canvasElement = document.getElementById('poseCanvas');
+  const canvasCtx = canvasElement.getContext('2d');
+
+  const pose = new Pose({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+  });
+
+  pose.setOptions({
+    modelComplexity: 1,
+    smoothLandmarks: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+  });
+
+  pose.onResults((results) => {
+    canvasElement.width = videoElement.videoWidth || 640;
+    canvasElement.height = videoElement.videoHeight || 480;
+
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+    if (results.poseLandmarks) {
+      const lm = results.poseLandmarks;
+
+      // Lấy tọa độ vai, khuỷu tay, cổ tay (dùng bên trái: 11, 13, 15 hoặc phải: 12, 14, 16)
+      const leftShoulder = lm[11], leftElbow = lm[13], leftWrist = lm[15];
+      const rightShoulder = lm[12], rightElbow = lm[14], rightWrist = lm[16];
+
+      // Chọn bên có độ tin cậy hiển thị rõ hơn
+      const useLeft = (leftShoulder.visibility || 0) > (rightShoulder.visibility || 0);
+      const shoulder = useLeft ? leftShoulder : rightShoulder;
+      const elbow = useLeft ? leftElbow : rightElbow;
+      const wrist = useLeft ? leftWrist : rightWrist;
+
+      // Tính góc khuỷu tay
+      const angle = calculateAngle(shoulder, elbow, wrist);
+
+      // Logic chuyển trạng thái đếm số lần
+      const stateEl = document.getElementById('pushupState');
+      if (angle > 160) {
+        if (pushupStage === 'DOWN') {
+          pushupCount++;
+          document.getElementById('pushupCount').textContent = pushupCount;
+        }
+        pushupStage = 'UP';
+        if (stateEl) { stateEl.textContent = 'ĐẨY LÊN (UP)'; stateEl.className = 'absolute top-4 right-4 bg-lime-500/80 text-black px-3 py-1.5 rounded-xl text-xs font-bold'; }
+      } else if (angle < 90) {
+        pushupStage = 'DOWN';
+        if (stateEl) { stateEl.textContent = 'HẠ XUỐNG (DOWN)'; stateEl.className = 'absolute top-4 right-4 bg-orange-500/80 text-white px-3 py-1.5 rounded-xl text-xs font-bold'; }
+      }
+
+      // Vẽ khớp khuỷu tay lên màn hình
+      canvasCtx.fillStyle = '#00e5ff';
+      [shoulder, elbow, wrist].forEach(pt => {
+        canvasCtx.beginPath();
+        canvasCtx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 8, 0, 2 * Math.PI);
+        canvasCtx.fill();
+      });
+    }
+    canvasCtx.restore();
+  });
+
+  cameraHelper = new Camera(videoElement, {
+    onFrame: async () => {
+      await pose.send({ image: videoElement });
+    },
+    width: 640,
+    height: 480
+  });
+
+  cameraHelper.start();
+}
+
+// Dừng camera khi chuyển bài tập khác
+function stopPushupTracker() {
+  if (cameraHelper) {
+    cameraHelper.stop();
+    cameraHelper = null;
+  }
+}
